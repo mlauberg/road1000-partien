@@ -4,6 +4,8 @@ Drill Pool: deine eigenen Fehlerstellungen als Quiz, nur zur aktuellen Stufe.
     python3 drill.py add games/<report>.json      nimmt Drillkandidaten des Spiels auf (Stufe <= STUFE, Verlust >= 15 %), Pool max 10 offen
     python3 drill.py quiz [n]                     rendert bis zu n faellige Aufgaben OHNE Pfeile und ohne Tipp
     python3 drill.py reveal <id> [--ok|--fail]    Aufloesung mit Pfeilen, Ergebnis wird gespeichert
+    python3 drill.py warum <id> <Zug>             nach einer falschen Antwort: 4 Bilder, warum SEIN Zug (SAN, z. B. exf6) schlechter ist als der beste
+                                                  (Engine Antwort, Folge, Materialbilanz, daneben dieselbe Folge nach dem besten Zug)
     python3 drill.py stats                        Pool, faellig, Trefferquote
     python3 drill.py prune                        wirft alles raus, was nicht zur Stufe passt (nach Stufenwechsel oder Regelaenderung)
 
@@ -109,6 +111,80 @@ def reveal(did, result=None):
     print(f"Richtig: {', '.join(it['accepted'])} | Variante: {it['line']} | {it['grund']}" + (" | ERLEDIGT" if it["done"] else f" | wieder am {it['due']}"))
 
 
+VALUES = {chess.PAWN: 1, chess.KNIGHT: 3, chess.BISHOP: 3, chess.ROOK: 5, chess.QUEEN: 9}
+
+
+def material(board, color):
+    """Materialstand aus Sicht von color in Bauerneinheiten (plus = du hast mehr)."""
+    return sum(VALUES.get(p.piece_type, 0) * (1 if p.color == color else -1) for p in board.piece_map().values())
+
+
+def en_prise_words(board, color):
+    from analyze import en_prise
+    return ", ".join(f"{show.WORDS[board.piece_at(s).piece_type]} {chess.square_name(s)} ({why})" for s, why in en_prise(board, color).items())
+
+
+def warum(did, san, plies=4):
+    """Warum nicht dein Zug: Engine Antwort, Folge und Materialbilanz als Bilderfolge, daneben dasselbe fuer den besten Zug.
+    Jeder Satz im Bild kommt aus der Engine oder vom Brett; die FAKT Zeilen je Bild werden gedruckt."""
+    import chess.engine
+    from analyze import win_prob, ENGINE_PATH, DEPTH_PUNISH
+    d = load()
+    it = next((x for x in d["items"] if x["id"] == did), None)
+    if not it:
+        print("unbekannte id"); return
+    b0 = chess.Board(it["fen"]); me = b0.turn
+    try:
+        mv = b0.parse_san(san)
+    except ValueError:
+        print(f"'{san}' ist in dieser Stellung kein gueltiger Zug."); return
+    if b0.san(mv) in it["accepted"]:
+        print(f"{b0.san(mv)} ist richtig (steht in der Liste der akzeptierten Zuege), kein warum noetig."); return
+    e = chess.engine.SimpleEngine.popen_uci(ENGINE_PATH); e.configure({"Threads": 1, "Hash": 256})
+    try:
+        def follow(first):
+            """Zug spielen, Engine Variante folgen: mindestens plies Halbzuege, dann weiter, solange geschlagen wird
+            (sonst stuende die Materialbilanz mitten im Abtausch), hoechstens 8."""
+            b = b0.copy(); b.push(first); boards = [b.copy()]
+            info = e.analyse(b, chess.engine.Limit(depth=DEPTH_PUNISH))
+            win = win_prob(info["score"].pov(me)); pv = []
+            for m in info.get("pv", [])[:8]:
+                cap = b.is_capture(m); b.push(m); pv.append(m); boards.append(b.copy())
+                if len(pv) >= plies and not cap:
+                    break
+            return win, boards, pv
+        win_u, bu, pv_u = follow(mv)
+        best = b0.parse_san(it["best"])
+        win_b, bb, pv_b = follow(best)
+    finally:
+        e.quit()
+    m0 = material(b0, me)
+
+    def mat_txt(b):
+        diff = material(b, me) - m0
+        return "Material gleich" if diff == 0 else f"Material {diff:+d} fuer dich".replace("fuer", "für")
+    sq = chess.square_name
+    frames = [{"fen": it["fen"], "lastmove": chess.Move.from_uci(it["lastmove"]) if it.get("lastmove") else None,
+               "arrows": [(sq(mv.from_square), sq(mv.to_square), "red"), (sq(best.from_square), sq(best.to_square), "green")],
+               "text": f"Dein Zug {show.move_words(b0, mv)} (rot): Gewinnchance {win_u:.0f} %. Bester Zug {show.move_words(b0, best)} (grün): {win_b:.0f} %."}]
+    if pv_u:
+        reply = pv_u[0]; hang = en_prise_words(bu[1], me)
+        frames.append({"fen": bu[0].fen(), "lastmove": mv, "arrows": [(sq(reply.from_square), sq(reply.to_square), "red")],
+                       "text": f"Seine Antwort: {show.move_words(bu[0], reply)} (rot)." + (f" Danach hängt bei dir: {hang}." if hang else "")})
+        rest = show.line_words(bu[1], bu[1].variation_san(pv_u[1:]), 7, first="du") if len(pv_u) > 1 else ""
+        frames.append({"fen": bu[-1].fen(), "lastmove": pv_u[-1], "arrows": [],
+                       "text": (f"Weiter {rest}. " if rest else "") + f"Ergebnis: {mat_txt(bu[-1])}, Gewinnchance {win_u:.0f} %."})
+    restb = show.line_words(bb[0], bb[0].variation_san(pv_b), 8, first="er") if pv_b else ""
+    frames.append({"fen": bb[-1].fen(), "lastmove": pv_b[-1] if pv_b else best, "arrows": [],
+                   "text": f"Nach {show.move_words(b0, best)} dagegen: " + (f"{restb}. " if restb else "") + f"Ergebnis: {mat_txt(bb[-1])}, Gewinnchance {win_b:.0f} %."})
+    os.makedirs(DRILL_DIR, exist_ok=True)
+    out = os.path.join(DRILL_DIR, f"{it['id']}_warum_{b0.san(mv).replace('+', '').replace('#', '').replace('=', '')}.png")
+    show.storyboard(out, frames, title=f"{it['id']}: warum nicht {show.move_words(b0, mv)}? Thema: {show.umlaut(it['grund'])}",
+                    perspective="white" if me == chess.WHITE else "black", cols=2, size=460)
+    print(out)
+    print(f"Gewinnchance: dein Zug {win_u:.0f} %, bester Zug {win_b:.0f} % | nach deinem Zug {b0.variation_san([mv] + pv_u)}: {mat_txt(bu[-1])} | nach dem besten {b0.variation_san([best] + pv_b)}: {mat_txt(bb[-1])}")
+
+
 def speed():
     """Woechentliche Schnellrunde: alle erledigten Aufgaben, 10 Sekunden je Stellung, ohne Spicken."""
     d = load(); os.makedirs(DRILL_DIR, exist_ok=True)
@@ -158,6 +234,8 @@ if __name__ == "__main__":
         quiz(int(a[1]) if len(a) > 1 else 3)
     elif a[0] == "reveal":
         reveal(a[1], "ok" if "--ok" in a else ("fail" if "--fail" in a else None))
+    elif a[0] == "warum":
+        warum(a[1], a[2])
     elif a[0] == "stats":
         stats()
     elif a[0] == "prune":
