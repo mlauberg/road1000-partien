@@ -35,7 +35,7 @@ Die Schichten 1 bis 3 entsprechen den ersten Stufen der Stappenmethode (Brunia, 
 1. Drill zuerst (5 Minuten): `drill.py quiz`, 3 bis 5 faellige Aufgaben. Q antwortet in Worten, Coach vergleicht mit den akzeptierten Zuegen, Loesung als Bild, `reveal --ok` oder `--fail`.
 2. Beispiele anschauen (3 Minuten): L1, L2, F1, F2 der letzten Partie(n). Kein Vortrag, Bilder und ein paar Saetze Ton.
 3. Spielen: 1 bis 3 Rapid Partien mit der Routine der aktuellen Schicht. Nach jeder Partie 10 Sekunden ehrlich: drei Blicke gemacht, ja oder nein.
-4. "Analyse": `analyze.py --pull`, Lektionen und Funde kommen als Bilder, Drills werden ergaenzt, eine Zeile Trend.
+4. "Analyse": `analyze.py --fetch`, Lektionen und Funde kommen als Bilder, Drills werden ergaenzt, eine Zeile Trend.
 
 Woechentlich: Schnellrunde (`drill.py speed`): alle erledigten Aufgaben, 10 Sekunden je Stellung, ohne Spicken.
 Alle 10 Partien: Schichtpruefung mit `analyze.py --progress`. Steht die Zahl, wird STUFE in analyze.py erhoeht und `drill.py prune` laeuft. Steht sie nicht, aendert sich nichts, ausser dass die Drills der Schicht weitergehen.

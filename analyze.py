@@ -4,10 +4,10 @@ Road to 1000 - Stockfish Spielanalyse fuer neogon51 (v3, 16.10.2026).
 
     python3 analyze.py game.pgn      -> Report (Text + JSON + Bilder), traegt das Spiel in progress.json ein
     python3 analyze.py inbox/neu.pgn -> Datei mit mehreren Partien: jede neue wird analysiert, bekannte uebersprungen (--force: alle)
-    python3 analyze.py --pull        -> holt inbox/alle.pgn von INBOX_URL (GitHub raw) und analysiert alle neuen Partien
-    python3 analyze.py --fetch       -> stoesst den Abruf bei chess.com JETZT an (Push auf request.txt, GitHub Action holt die Partien),
-                                        wartet bis zu 3 Minuten auf das Ergebnis und analysiert dann. Nur wenn dieser Ordner ein Klon
-                                        des Repos mit Push Recht ist (Variante B), sonst Hinweis und Rueckfall auf --pull.
+    python3 analyze.py --fetch       -> Normalweg bei "Analyse": stoesst den Abruf bei chess.com JETZT an (Push auf request.txt,
+                                        die GitHub Action holt die Partien nach inbox/), wartet bis zu 3 Minuten auf die Marke
+                                        inbox/.last_run.txt und analysiert dann alle neuen Partien. Braucht einen Klon mit Schreibrecht.
+    python3 analyze.py --pull        -> Rueckfall ohne Schreibrecht: holt inbox/alle.pgn von INBOX_URL (GitHub raw), analysiert alle neuen
     python3 analyze.py --progress    -> Trend ueber alle Spiele, Stufe 1 Kennzahlen, Stufenfreigabe
 
 Alle Bewertungen kommen von Stockfish. Zugklassen nur nach Verlust an Gewinnchance (wie Lichess):

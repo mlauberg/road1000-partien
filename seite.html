@@ -1,0 +1,261 @@
+<meta charset="utf-8">
+<title>Road to 1000</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,300..800&display=swap">
+<style>
+/* Ein Blatt, linksbündig, eine Schrift in zwei Breiten. Das Bild der Seite ist die Linie: eine Brettlinie von 450 bis 1000
+   in Feldern zu 50 Punkten, der Bauer steht auf dem Feld des aktuellen Ratings und wird am Ende zur Dame.
+   Farben: die zwei Felder des Bretts und Tinte. Keine Karten, keine Schatten, keine Erklärtexte. */
+:root {
+  --paper: #f4f4ee; --ink: #182018; --ink2: #4d584c; --ink3: #8b948a; --rule: #d6dbd0;
+  --sand: #e9e1c0; --green: #5f8b3f; --warn: #b4461a; --piece: #182018; --tip-bg: #182018; --tip-fg: #f4f4ee;
+  --font: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #151915; --ink: #ebeadc; --ink2: #b4baa9; --ink3: #7d867b; --rule: #2d342c;
+  --sand: #d3c79e; --green: #6a9a45; --warn: #f0956a; --piece: #182018; --tip-bg: #ebeadc; --tip-fg: #151915; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #151915; --ink: #ebeadc; --ink2: #b4baa9; --ink3: #7d867b; --rule: #2d342c;
+  --sand: #d3c79e; --green: #6a9a45; --warn: #f0956a; --piece: #182018; --tip-bg: #ebeadc; --tip-fg: #151915; color-scheme: dark }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.4;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 56px; }
+main { max-width: 840px; margin: 0 auto; display: grid; gap: 44px; }
+main > section { min-width: 0; }
+h1 { margin: 0 0 10px; font-size: 1rem; font-weight: 500; color: var(--ink2); }
+h2 { margin: 0 0 14px; font-size: 1.3rem; font-weight: 600; font-variation-settings: "wdth" 88; }
+p { margin: 0; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* Die Linie */
+.now { display: flex; align-items: baseline; gap: 14px; margin-bottom: 14px; }
+.now b { font-size: clamp(4.4rem, 17vw, 6.6rem); line-height: .85; font-weight: 800; font-variation-settings: "wdth" 78; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.now span { color: var(--ink2); }
+.file { display: grid; grid-template-columns: repeat(11, 1fr); border: 2px solid var(--ink); }
+.sq { aspect-ratio: 1; position: relative; display: grid; place-items: center; }
+.sq:nth-child(odd) { background: var(--sand); } .sq:nth-child(even) { background: var(--green); }
+.sq svg { width: 62%; height: 62%; fill: var(--piece); }
+.sq svg.ghost { fill: none; stroke: var(--piece); stroke-width: 2; opacity: .55; }
+.scale { position: relative; height: 1.3em; margin-top: 4px; font-size: .78rem; color: var(--ink3); font-variant-numeric: tabular-nums; }
+.scale span { position: absolute; top: 0; transform: translateX(-50%); }
+.scale span:first-child { transform: none; } .scale span:last-child { transform: translateX(-100%); color: var(--ink); font-weight: 600; }
+@media (max-width: 520px) { .scale span.mid { display: none; } }
+
+/* Drei Zahlen */
+.three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.three div { min-width: 0; border-top: 2px solid var(--ink); padding-top: 10px; }
+.three b { display: block; font-size: clamp(2rem, 8vw, 3rem); line-height: 1; font-weight: 700; font-variation-settings: "wdth" 85; font-variant-numeric: tabular-nums; }
+.three b.off { color: var(--warn); }
+.three span { display: block; margin-top: 6px; font-size: .9rem; color: var(--ink2); line-height: 1.3; }
+.gate { margin-top: 18px; max-width: 64ch; color: var(--ink2); }
+.gate b { color: var(--ink); font-weight: 600; }
+
+/* Kurve */
+.chartwrap { position: relative; }
+svg.chart { width: 100%; height: auto; display: block; }
+.tip { position: absolute; pointer-events: none; background: var(--tip-bg); color: var(--tip-fg); padding: 6px 9px; font-size: .82rem; line-height: 1.3; white-space: nowrap; transform: translate(-50%, -120%); opacity: 0; transition: opacity .12s; }
+.tip b { font-variant-numeric: tabular-nums; font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { .tip { transition: none; } }
+
+/* Partienbuch */
+.book { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .92rem; font-variant-numeric: tabular-nums; }
+th, td { padding: 9px 12px 9px 0; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--rule); vertical-align: baseline; }
+th { font-weight: 500; color: var(--ink3); font-size: .82rem; }
+th.l, td.l { text-align: left; }
+td.nr { color: var(--ink3); }
+tr:last-child td { border-bottom: 2px solid var(--ink); }
+.piece { display: inline-block; width: .85em; height: .85em; border: 1.5px solid var(--ink); vertical-align: -1px; margin-right: 6px; }
+.piece.b { background: var(--ink); }
+.w { font-weight: 700; } .v { font-weight: 700; color: var(--warn); }
+.hint { color: var(--warn); font-weight: 600; }
+.dim { color: var(--ink3); }
+.pat { color: var(--ink2); font-size: .86rem; }
+
+/* Drills */
+.drillhead { display: flex; flex-wrap: wrap; gap: 6px 22px; align-items: baseline; margin-bottom: 12px; }
+.drillhead b { font-size: 2rem; font-weight: 700; font-variation-settings: "wdth" 85; line-height: 1; }
+.drillhead span { color: var(--ink2); }
+.dlist { border-top: 2px solid var(--ink); }
+.drow { display: grid; grid-template-columns: 3.4em 1fr auto; gap: 12px; align-items: baseline; padding: 8px 0; border-bottom: 1px solid var(--rule); font-size: .95rem; }
+.drow b { font-weight: 600; }
+.drow span { color: var(--ink2); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.drow small { color: var(--ink3); font-variant-numeric: tabular-nums; }
+.drow.due small { color: var(--warn); font-weight: 600; }
+
+.empty { color: var(--ink2); }
+.stand { color: var(--ink3); font-size: .85rem; }
+@media (max-width: 440px) { .three { gap: 10px; } .three span { font-size: .82rem; } }
+</style>
+<main>
+  <section>
+    <h1>Road to 1000</h1>
+    <div class="now"><b id="rating">–</b><span id="ratingsub">Rapid, chess.com</span></div>
+    <div class="file" id="file" role="img" aria-label="Rating auf einer Brettlinie von 450 bis 1000"></div>
+    <div class="scale" id="scale"></div>
+  </section>
+
+  <section>
+    <h2>Drei Zahlen, letzte 10 Partien</h2>
+    <div class="three" id="three"></div>
+    <p class="gate" id="gate"></p>
+  </section>
+
+  <section>
+    <h2>Rating nach jeder Partie</h2>
+    <div class="chartwrap" id="chartwrap"><div id="chart"></div><div class="tip" id="tip"></div></div>
+  </section>
+
+  <section>
+    <h2>Partienbuch</h2>
+    <div class="book" id="games"></div>
+  </section>
+
+  <section>
+    <h2>Drills</h2>
+    <div id="drills"></div>
+  </section>
+  <p class="stand" id="stand">Lade.</p>
+</main>
+<script>
+(async () => {
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const num = (v) => (v === null || v === undefined || v === "?" || v === "") ? null : Number(v);
+  const de = (x, d = 2) => x.toFixed(d).replace(".", ",");
+  const uml = (s) => String(s ?? "").replace(/^(Captures|Checks|Attacks): /, "").replace(/haeng/g, "häng").replace(/ueberseh/g, "überseh").replace(/Laeufer/g, "Läufer").replace(/Koenig/g, "König");
+  const LO = 450, STEP = 50, N = 11;   // elf Felder: 450 bis 1000
+  const PAWN = `<svg viewBox="0 0 40 48" aria-hidden="true"><circle cx="20" cy="10" r="7"/><rect x="12" y="17" width="16" height="3" rx="1.5"/><path d="M15 20h10l-2 6c5 3 7 8 7 14H10c0-6 2-11 7-14z"/><rect x="7" y="40" width="26" height="6" rx="1.5"/></svg>`;
+  const QUEEN = (cls) => `<svg class="${cls}" viewBox="0 0 40 48" aria-hidden="true"><path d="M7 38 10 12l8 12 2-16 2 16 8-12 3 26z"/><rect x="7" y="40" width="26" height="6" rx="1.5"/></svg>`;
+  let games = [], drills = [], meta = {};
+
+  function ladder(rating) {
+    const idx = rating === null ? -1 : Math.min(N - 1, Math.max(0, Math.floor((rating - LO) / STEP)));
+    const done = rating !== null && rating >= 1000;
+    $("file").innerHTML = Array.from({ length: N }, (_, i) =>
+      `<div class="sq">${i === idx ? (done ? QUEEN("") : PAWN) : (i === N - 1 ? QUEEN("ghost") : "")}</div>`).join("");
+    $("scale").innerHTML = [450, 600, 750, 900, 1000].map(v => `<span class="${v === 450 || v === 1000 ? "" : "mid"}" style="left:${(v - LO) / (STEP * N) * 100}%">${v}</span>`).join("");
+  }
+
+  function render() {
+    const t = new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+    $("stand").textContent = `${games.length} Partien, ${drills.length} Drills. Stand ${t}.`;
+    if (!games.length) {
+      ladder(null); $("rating").textContent = "–"; $("three").innerHTML = ""; $("gate").textContent = "Noch keine Partie gesichert.";
+      $("chart").innerHTML = ""; $("games").innerHTML = `<p class="empty">Noch keine Partien.</p>`;
+    } else { renderGames(); }
+    renderDrills();
+  }
+
+  function renderGames() {
+    const last = games[games.length - 1]; const rating = num(last.user_elo);
+    $("rating").textContent = rating ?? "–";
+    $("ratingsub").textContent = `nach ${games.length} Partien, Start 480`;
+    ladder(rating);
+
+    const l10 = games.slice(-10), n = l10.length;
+    const k = (g, key) => Number((g.kpi || {})[key] || 0);
+    const sum = (f) => l10.reduce((a, g) => a + f(g), 0);
+    const hang = sum(g => k(g, "haengen_gelassen")) / n;
+    const gn = sum(g => k(g, "gratis_genommen")), gl = sum(g => k(g, "gratis_liegen_gelassen"));
+    const gratis = (gn + gl) ? 100 * gn / (gn + gl) : null;
+    const pz = sum(g => k(g, "gegner_patzer")), pg = sum(g => k(g, "gegner_patzer_genutzt"));
+    const bs = sum(g => k(g, "blunder_schnell")), bg = sum(g => k(g, "blunder_gesamt"));
+    const kz = l10.filter(g => (g.kpi || {}).koenig_zentrum).length;
+    $("three").innerHTML =
+      `<div><b class="${hang < 1 ? "" : "off"}">${de(hang)}</b><span>Figuren hängen gelassen je Partie</span></div>` +
+      `<div><b class="${gratis !== null && gratis >= 90 ? "" : "off"}">${gratis === null ? "–" : Math.round(gratis) + " %"}</b><span>Gratis Material genommen</span></div>` +
+      `<div><b>${pz ? Math.round(100 * pg / pz) + " %" : "–"}</b><span>Gegnerpatzer genutzt${pz ? `, ${pg} von ${pz}` : ""}</span></div>`;
+    const stufe = Number(meta.stufe || 1);
+    const extra = [];
+    if (kz >= 3) extra.push(`König in ${kz} von ${n} Partien nach Zug 12 noch in der Mitte: Konzept Königssicherheit ist fällig.`);
+    if (bg) extra.push(`${bs} von ${bg} Blundern unter 5 Sekunden.`);
+    $("gate").innerHTML = (stufe === 1
+      ? `<b>Stufe 1, Captures.</b> Stufe 2 öffnet sich bei unter 1,0 hängen gelassen und 90 % gratis genommen über 10 Partien${n < 10 ? `, noch ${10 - n} Partien bis zur Prüfung` : ""}. `
+      : `<b>Stufe ${stufe}.</b> `) + extra.join(" ");
+    renderChart(); renderTable();
+  }
+
+  function renderChart() {
+    const pts = games.map((g, i) => ({ i, v: num(g.user_elo), g })).filter(p => p.v !== null);
+    if (pts.length < 2) { $("chart").innerHTML = `<p class="empty">Ab zwei Partien gibt es eine Kurve.</p>`; return; }
+    const W = Math.max(320, $("chart").clientWidth || 840), H = Math.round(W < 600 ? W * 0.66 : 240), pad = { l: 40, r: 14, t: 18, b: 26 };
+    const ys = pts.map(p => p.v); const lo = Math.floor((Math.min(480, ...ys) - 20) / 50) * 50, hi = Math.ceil((Math.max(1000, ...ys) + 20) / 50) * 50;
+    const span = W - pad.l - pad.r, x = (i) => pad.l + i * span / Math.max(1, games.length - 1), y = (v) => pad.t + (hi - v) / (hi - lo) * (H - pad.t - pad.b);
+    const ticks = []; for (let v = Math.ceil(lo / 100) * 100; v <= hi; v += 100) ticks.push(v);
+    const path = pts.map((p, j) => (j ? "L" : "M") + x(p.i).toFixed(1) + " " + y(p.v).toFixed(1)).join(" ");
+    const lastP = pts[pts.length - 1]; const cell = span / Math.max(1, games.length - 1); const F = "font-family=\"Bricolage Grotesque, sans-serif\" font-size=\"12\"";
+    $("chart").innerHTML = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Rating nach jeder Partie, Ziel 1000">
+      ${ticks.map(v => `<line x1="${pad.l}" x2="${W - pad.r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--rule)"/><text x="${pad.l - 8}" y="${y(v) + 4}" ${F} text-anchor="end" fill="var(--ink3)">${v}</text>`).join("")}
+      <line x1="${pad.l}" x2="${W - pad.r}" y1="${y(1000)}" y2="${y(1000)}" stroke="var(--ink)" stroke-width="1.5"/>
+      <text x="${W - pad.r}" y="${y(1000) - 6}" ${F} text-anchor="end" fill="var(--ink)" font-weight="600">1000</text>
+      <path d="${path}" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <line id="xh" x1="0" x2="0" y1="${pad.t}" y2="${H - pad.b}" stroke="var(--ink2)" opacity="0"/>
+      ${pts.map(p => `<circle cx="${x(p.i)}" cy="${y(p.v)}" r="4" fill="var(--green)" stroke="var(--paper)" stroke-width="2"/>`).join("")}
+      <circle cx="${x(lastP.i)}" cy="${y(lastP.v)}" r="6" fill="var(--ink)"/>
+      <text x="${pad.l}" y="${H - 6}" ${F} fill="var(--ink3)">Partie 1</text>
+      <text x="${W - pad.r}" y="${H - 6}" ${F} text-anchor="end" fill="var(--ink3)">${games.length}</text>
+      ${pts.map(p => `<rect data-i="${p.i}" x="${x(p.i) - cell / 2}" y="${pad.t}" width="${cell}" height="${H - pad.t - pad.b}" fill="transparent"/>`).join("")}
+    </svg>`;
+    const svg = $("chart").querySelector("svg"), tip = $("tip"), xh = svg.querySelector("#xh");
+    const show = (i) => {
+      const p = pts.find(q => q.i === Number(i)); if (!p) return;
+      const r = svg.getBoundingClientRect(), wrap = $("chartwrap").getBoundingClientRect();
+      tip.innerHTML = `<b>${p.v}</b> nach Partie ${p.i + 1}<br>${esc(p.g.date)}, ${esc(p.g.color)} gegen ${esc(p.g.opp)} (${esc(p.g.opp_elo)}), ${esc(p.g.result)}`;
+      tip.style.left = (r.left - wrap.left + x(p.i) / W * r.width) + "px"; tip.style.top = (r.top - wrap.top + y(p.v) / H * r.height) + "px"; tip.style.opacity = "1";
+      xh.setAttribute("x1", x(p.i)); xh.setAttribute("x2", x(p.i)); xh.setAttribute("opacity", "0.45");
+    };
+    const hide = () => { tip.style.opacity = "0"; xh.setAttribute("opacity", "0"); };
+    svg.querySelectorAll("rect[data-i]").forEach(rc => { rc.addEventListener("mouseenter", () => show(rc.dataset.i)); rc.addEventListener("touchstart", () => show(rc.dataset.i), { passive: true }); });
+    svg.addEventListener("mouseleave", hide);
+  }
+
+  function renderTable() {
+    const rows = games.slice().reverse().map((g, j) => {
+      const kp = g.kpi || {}; const n = games.length - j;
+      const res = g.result === "Sieg" ? `<span class="w">1</span>` : g.result === "Niederlage" ? `<span class="v">0</span>` : `½`;
+      const piece = `<span class="piece ${g.color === "Schwarz" ? "b" : ""}" title="${esc(g.color)}"></span>`;
+      const roch = kp.koenig_zentrum ? `<span class="hint">${esc(kp.rochade_zug || "nie")}</span>` : esc(kp.rochade_zug || "nie");
+      const pat = (g.lektionen || []).map(uml).join(", ");
+      return `<tr><td class="nr">${n}</td><td class="l">${esc(g.date).slice(5)}</td><td class="l">${piece}${esc(g.opp)} <span class="dim">${esc(g.opp_elo)}</span></td><td>${res}</td>
+        <td>${esc(g.user_elo)}</td><td>${esc(g.blunders)}</td><td>${kp.haengen_gelassen ?? ""}</td><td>${kp.gratis_genommen ?? 0}/${(kp.gratis_genommen ?? 0) + (kp.gratis_liegen_gelassen ?? 0)}</td>
+        <td>${roch}</td><td>${kp.sek_median !== undefined && kp.sek_median !== null ? Math.round(kp.sek_median) : ""}</td><td class="l pat">${esc(pat)}</td></tr>`;
+    }).join("");
+    $("games").innerHTML = `<table><thead><tr><th></th><th class="l">Datum</th><th class="l">Gegner</th><th>Erg.</th><th>Elo</th><th>Blunder</th><th>Hängt</th><th>Gratis</th><th>Rochade</th><th>Sek/Zug</th><th class="l">Lektionen</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  function renderDrills() {
+    if (!drills.length) { $("drills").innerHTML = `<p class="empty">Noch keine Aufgaben.</p>`; return; }
+    const today = new Date().toISOString().slice(0, 10);
+    const open = drills.filter(d => !d.done).sort((a, b) => a.due.localeCompare(b.due)), due = open.filter(d => d.due <= today);
+    const tries = drills.reduce((a, d) => a + d.tries, 0), ok = drills.reduce((a, d) => a + d.history.filter(h => h.r === "ok").length, 0);
+    $("drills").innerHTML = `<div class="drillhead"><b>${due.length}</b><span>heute fällig</span><span>${open.length} offen</span><span>${drills.length - open.length} erledigt</span><span>${tries ? ok + " von " + tries + " richtig" : "noch keine Antwort"}</span></div>
+      <div class="dlist">${open.map(d => `<div class="drow ${d.due <= today ? "due" : ""}"><b>${esc(d.id)}</b><span>${esc(uml(d.grund || "Aufgabe"))}, Zug ${esc(String(d.move_no || "").replace(/\.+$/, ""))}</span><small>${d.due <= today ? "heute" : "ab " + esc(d.due.slice(5).replace("-", "."))}</small></div>`).join("")}</div>`;
+  }
+
+  render();
+  let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { if (games.length) renderChart(); }, 150); });
+  const db = await claude.use("db");
+  if (!db) { $("stand").textContent = "Datenbank in dieser Ansicht nicht erreichbar. Als Besitzer anmelden und neu laden."; return; }
+  const onErr = (what) => (e) => { $("stand").textContent = `${what} konnte nicht gelesen werden (${e && e.code ? e.code : "Fehler"}). Seite neu laden.`; };
+  db.collection("partien").orderBy("ende").limit(1000).onSnapshot(s => { games = s.docs.map(d => d.data()); render(); }, onErr("Partien"));
+  db.collection("drills").limit(1000).onSnapshot(s => {
+    const statics = s.docs.map(d => d.data());
+    db.collection("drill_log").limit(1000).get().then(ls => {
+      const logs = ls.docs.map(d => d.data());
+      drills = statics.map(st => {
+        const hist = logs.filter(l => l.drill === st.id).sort((a, b) => (a.n || 0) - (b.n || 0));
+        let streak = 0, due = st.due0 || st.due || new Date().toISOString().slice(0, 10), done = false;
+        for (const h of hist) {
+          const day = new Date(h.d + "T00:00:00");
+          if (h.r === "ok") { streak += 1; if (streak >= 3) done = true; day.setDate(day.getDate() + (streak === 1 ? 3 : 7)); }
+          else { streak = 0; day.setDate(day.getDate() + 1); }
+          due = day.toISOString().slice(0, 10);
+        }
+        return { ...st, tries: hist.length, streak, due, done, history: hist };
+      });
+      render();
+    }).catch(onErr("Drills"));
+  }, onErr("Drills"));
+  db.doc("meta/stand").onSnapshot(s => { meta = s.exists ? s.data() : {}; render(); }, onErr("Stand"));
+})();
+</script>

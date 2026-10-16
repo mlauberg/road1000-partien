@@ -1,6 +1,6 @@
 # Holt neue Rapid Partien von chess.com und committet sie nach inbox/.
 # Ausloeser: ein Push auf request.txt (macht `python3 analyze.py --fetch` aus dem Claude Chat) oder der Knopf
-# "Run workflow". Kein Zeitplan: den regelmaessigen Abruf macht der Oracle Server.
+# "Run workflow" bei GitHub. Kein Zeitplan: geholt wird, wenn Q "Analyse" sagt.
 # Schreibt bei jedem Lauf inbox/.last_run.txt, daran erkennt analyze.py --fetch, dass der Lauf fertig ist.
 name: fetch
 on:
