@@ -1,2 +1,12 @@
+# Sitzungsware und Grosses bleiben draussen; Fortschritt liegt in der Artefakt Datenbank
 out/
 __pycache__/
+engine/
+*.png
+drills/
+games/
+sync_in/
+sync_out/
+progress.json
+drills.json
+.sync_state.json
