@@ -22,10 +22,10 @@ jobs:
         continue-on-error: true
         env:
           ROAD1000_CONTACT: ${{ secrets.ROAD1000_CONTACT }}
-        run: python3 fetch_chesscom.py
+        run: python3 fetch_chesscom.py 2>&1 | tee /tmp/fetch.out
       - name: Ergebnis pushen (Marke auch bei Fehler, damit --fetch nicht wartet)
         run: |
-          date -u +"%Y-%m-%dT%H:%M:%SZ Lauf ${{ github.run_id }} ${{ steps.holen.outcome }}" > inbox/.last_run.txt
+          echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) Lauf ${{ github.run_id }} ${{ steps.holen.outcome }}: $(tail -n 1 /tmp/fetch.out)" > inbox/.last_run.txt
           git config user.name "road1000 fetch"
           git config user.email "fetch@users.noreply.github.com"
           git add -A inbox

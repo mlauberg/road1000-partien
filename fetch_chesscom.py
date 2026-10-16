@@ -85,16 +85,17 @@ def main(argv):
     if os.path.exists(STATE):
         with open(STATE, encoding="utf-8") as fh:
             state.update(json.load(fh))
-    seen, new = set(state["seen"]), []
+    seen, new, gesehen = set(state["seen"]), [], []
     for y, m in months(2):
         try:
             data = get_json(API.format(user=USER, y=y, m=m))
         except urllib.error.HTTPError as e:
             if e.code == 404:
-                continue  # Monat ohne Partien
+                gesehen.append(f"{y}-{m:02d} leer"); continue  # Monat ohne Partien
             sys.exit(f"HTTP {e.code} bei {y}-{m:02d}: {e.reason}")
         except (urllib.error.URLError, TimeoutError) as e:
             sys.exit(f"Keine Verbindung zu api.chess.com: {e}")
+        gesehen.append(f"{y}-{m:02d} {len(data.get('games', []))} Partien bei chess.com")
         for g in data.get("games", []):
             if cls != "alle" and g.get("time_class") != cls:
                 continue
@@ -107,7 +108,7 @@ def main(argv):
             new.append(g)
     new.sort(key=lambda g: g.get("end_time", 0))
     if not new:
-        print("Keine neuen Partien.")
+        print(f"Keine neuen Partien ({', '.join(gesehen)}).")
         return
     for g in new:
         line, opp = describe(g)
@@ -130,7 +131,7 @@ def main(argv):
             parts.append(sfh.read().strip())
     with open(os.path.join(INBOX, "alle.pgn"), "w", encoding="utf-8") as fh:
         fh.write("\n\n".join(parts) + "\n")
-    print(f"{len(new)} neue Partien | alle.pgn: {len(singles)} Partien")
+    print(f"{len(new)} neue Partien ({', '.join(gesehen)}), alle.pgn: {len(singles)} Partien")
 
 
 if __name__ == "__main__":
