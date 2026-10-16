@@ -38,8 +38,9 @@ Artefakt (Datenbank und Seite): https://claude.ai/artifact/E46EePzEV7k5vKzM8i5Bh
 Aus der Claude Umgebung sind nur GitHub und Paketquellen erreichbar (geprueft 16.10.2026: api.chess.com 403, github.com und git gehen). Deshalb holt eine GitHub Action die Partien bei chess.com und legt sie ins Repo; der Chat stoesst sie per Push an und liest das Ergebnis per Pull. Das Schreibrecht kommt vom GitHub Connector in claude.ai, verbunden mit Qs privatem Konto `mlauberg`. Der Fortschritt liegt in der Artefakt Datenbank (lesen und schreiben ohne Connector), Reports in `games/` sind Sitzungsware.
 Geprueft 17.10.2026 in einem frischen Klon, Schritte 1 bis 8 wortwoertlich: Engine Download 10 Sekunden, Import 7 Partien und 10 Drills, `--fetch` bis zur Rueckmeldung 13 bis 18 Sekunden, Quiz, Reveal, Export.
 
-## Stand 17.10.2026, 00:30
-* Rating nach Partie 7: 612 (Start 480 am 14.10.). 7 Partien, alle Rapid 10+0, mit Uhr.
-* Stufe 1 (Captures). Letzte 7: haengen gelassen 0,86 je Partie, gratis genommen 89 %, Gegnerpatzer genutzt 45 %, Koenig in 4 von 7 nach Zug 12 in der Mitte, Blunder unter 5 Sekunden 5 von 26. Konzept faellig: Figur haengen lassen, nicht gerettet, Koenigssicherheit (eine pro Woche, Protokoll 5a).
-* Drill Pool: 10 Aufgaben, 4 Antworten bisher (alle richtig). Faelligkeiten rechnet sync.py aus dem Antwortlog.
-* Datenbank: 7 Partien, 10 Drills, 4 Antworten, meta/stand (stufe 1).
+## Stand 17.10.2026, 00:30 (Sitzung vom 17.10. nachts)
+* Rating nach Partie 7: 612 (Start 480 am 14.10.). 7 Partien, alle Rapid 10+0, mit Uhr. Seit 15.10. abends keine neue Partie bei chess.com (Abruf 17.10. 00:47 Berlin: 7 Partien im Oktober).
+* Stufe 1 (Captures). Letzte 7: haengen gelassen 0,86 je Partie, gratis genommen 89 %, Gegnerpatzer genutzt 45 %, Koenig in 4 von 7 nach Zug 12 in der Mitte, Blunder unter 5 Sekunden 5 von 26. Konzept faellig: Figur haengen lassen, nicht gerettet, Koenigssicherheit (eine pro Woche, Protokoll 5a; noch keine gehalten).
+* Drill Pool: 10 Aufgaben, 7 Antworten (4 richtig D001 bis D003, 3 falsch D004 bis D006 am 17.10., alle drei "richtige Figur erkannt, falsche Rettung": Springer statt Bauer als Deckung, Rueckzug ohne Schach). D004 bis D006 wieder am 18.10. Offen und faellig: D007 bis D010 (ab 16.10.), D001 (17.10.), D003 (18.10.), D002 (22.10.).
+* Q hat am 17.10. nach dem Warum gefragt: Bilderfolgen mit show.storyboard aus check.py Fakten (Bauer als billigster Waechter, Rueckzug mit Schach = Angriff). Offen: Q wollte noch nicht entscheiden, ob die Faustregeln "wegziehen mit Tempo vor wegziehen" und "decken mit der billigsten Figur" als Zeile in KONZEPTE.md kommen; naechste Sitzung fragen.
+* Datenbank: 7 Partien, 10 Drills, 7 Antworten, meta/stand (stufe 1).
