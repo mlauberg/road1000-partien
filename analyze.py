@@ -815,7 +815,7 @@ def show_progress():
     print(f"Koenig nach Zug 12 in der Mitte (seine Dame lebt): {kz} von {n} Partien (Roch! in der Tabelle)")
     faellig = [(k, v) for k, v in pat.items() if v >= 3] + ([("Koenigssicherheit", kz)] if kz >= 3 else [])
     for k, v in faellig:
-        print(f"KONZEPT FAELLIG: {k} ({v} von {n} Partien). Karte aus KONZEPTE.md plus 3 eigene Stellungen, siehe Protokoll Abschnitt 5.")
+        print(f"KONZEPT FAELLIG: {k} ({v} von {n} Partien). Karte aus KONZEPTE.md plus 3 eigene Stellungen, siehe Protokoll Abschnitt 5a.")
     res = Counter(x["result"] for x in g)
     print("Ergebnisse: " + ", ".join(f"{k} {v}" for k, v in res.items()))
 
@@ -831,14 +831,22 @@ def main():
         def git(*a):
             return subprocess.run(["git", *a], cwd=BASE, capture_output=True, text=True)
         if git("rev-parse", "--is-inside-work-tree").returncode or "origin" not in git("remote").stdout:
-            raise SystemExit("--fetch braucht einen Git Klon des Repos mit Push Recht (Variante B). Rueckfall: python3 analyze.py --pull")
-        before = git("rev-parse", "HEAD").stdout.strip()
+            raise SystemExit("--fetch braucht einen Git Klon des Repos mit Schreibrecht. Rueckfall: python3 analyze.py --pull")
+        if not git("config", "user.email").stdout.strip():
+            git("config", "user.name", "road1000"); git("config", "user.email", "road1000@users.noreply.github.com")
+        branch = git("rev-parse", "--abbrev-ref", "HEAD").stdout.strip()
+        if branch == "HEAD":   # losgeloester Stand: auf main wechseln, sonst geht kein pull
+            git("checkout", "-q", "-B", "main", "origin/main"); branch = "main"
+        git("pull", "-q", "--rebase", "origin", branch)
         with open(os.path.join(BASE, "request.txt"), "w") as f:
             f.write(datetime.datetime.now().isoformat(timespec="seconds") + "\n")
-        git("add", "request.txt"); git("commit", "-qm", "Abruf angefordert")
-        r = git("push", "-q")
+        git("add", "request.txt")
+        r = git("commit", "-qm", "Abruf angefordert")
         if r.returncode:
-            raise SystemExit("Push fehlgeschlagen (kein Schreibrecht?): " + r.stderr.strip()[:200] + "\nRueckfall: python3 analyze.py --pull")
+            raise SystemExit("Commit fehlgeschlagen: " + (r.stdout + r.stderr).strip()[:300])
+        r = git("push", "-q", "origin", f"HEAD:{branch}")
+        if r.returncode:
+            raise SystemExit("Push fehlgeschlagen (kein Schreibrecht? GitHub Konto mlauberg verbunden?): " + r.stderr.strip()[:200] + "\nRueckfall: python3 analyze.py --pull")
         print("[--fetch] Abruf angestossen, warte auf die GitHub Action ...", file=sys.stderr, flush=True)
         path = os.path.join(BASE, "inbox", "alle.pgn")
         marker = os.path.join(BASE, "inbox", ".last_run.txt")   # schreibt die Action bei jedem Lauf, auch ohne neue Partien
@@ -847,17 +855,19 @@ def main():
         old, old_marker = read(path), read(marker)
         deadline = time.time() + int(os.environ.get("FETCH_WAIT", "180"))
         while time.time() < deadline:
-            time.sleep(15)
-            git("pull", "-q", "--rebase")
+            time.sleep(10)
+            git("pull", "-q", "--rebase", "origin", branch)
             if read(marker) != old_marker:
                 break
         text = read(path)
         if read(marker) == old_marker:
-            print("[--fetch] Die Action hat sich in 3 Minuten nicht gemeldet. Analysiere, was da ist (spaeter nochmal --fetch).", file=sys.stderr)
+            print("[--fetch] Die Action hat sich in 3 Minuten nicht gemeldet (GitHub Actions gestoert?). Analysiere, was da ist; spaeter nochmal --fetch.", file=sys.stderr)
+        elif "failure" in read(marker):
+            print(f"[--fetch] Action gelaufen, aber der Abruf bei chess.com ist fehlgeschlagen ({read(marker).strip()}). Analysiere, was da ist; spaeter nochmal --fetch.", file=sys.stderr)
         elif text == old:
-            print(f"[--fetch] Action gelaufen: {read(marker).strip()}. Keine neue Partie (chess.com Archiv noch nicht aktualisiert?).", file=sys.stderr)
+            print(f"[--fetch] Action gelaufen ({read(marker).strip()}). Keine neue Partie. Gerade erst gespielt? chess.com braucht manchmal ein paar Minuten, dann nochmal --fetch.", file=sys.stderr)
         else:
-            print(f"[--fetch] Action gelaufen: {read(marker).strip()}. Neue Partien angekommen.", file=sys.stderr)
+            print(f"[--fetch] Action gelaufen ({read(marker).strip()}). Neue Partien angekommen.", file=sys.stderr)
     elif sys.argv[1] == "--pull":
         if not INBOX_URL:
             raise SystemExit("INBOX_URL in analyze.py ist leer.")
