@@ -18,11 +18,13 @@ Q schreibt "Road to 1000" oder "Analyse". Claude macht in dieser Reihenfolge, oh
 7. Tageseinheit nach Lehrplan: Drills (`drill.py quiz`, `reveal`), Lektionsbilder L1, L2, F1, F2 je Partie, eine Zeile Trend (`analyze.py --progress`).
 8. Stand sichern, nach jedem Drill Block und am Ende: `python3 sync.py export sync_out`, dann die gedruckten Eintraege mit ArtifactData `batch` schreiben (bis 50 je Aufruf, nur neue Dokumente, kein if_version). Meldet export einen Stufenwechsel: `meta/stand` mit `get` lesen, mit `set` plus `if_version` auf die neue Stufe setzen. Die Seite "Road to 1000" zeigt den Stand sofort.
 
+Derselbe Chat an einem neuen Tag: Q schreibt nur "Analyse". Claude macht dann `git pull -q --rebase origin main`, Schritt 4 (Protokoll nochmal lesen) und Schritt 5 (Stand neu laden), danach Schritt 6. Ist die Umgebung inzwischen abgeraeumt (kein `engine/stockfish`, kein Klon), Schritte 1 bis 5 komplett.
+
 Artefakt (Datenbank und Seite): https://claude.ai/artifact/E46EePzEV7k5vKzM8i5Bhb
 
 ## Dateien
 * `analyze.py <pgn> | --fetch | --pull | --progress`: Stockfish Analyse mit 2 Engines parallel, waehlt Lektion 1 und 2 (erst aktuelle Stufe, dann Wiederholung, dann groesster Verlust), rendert L1, L2 (Lektionen, 3 Bilder, Text nur aus Engine Fakten, in Worten), F1, F2 (Funde), V1 (verpasste Chance), fuehrt progress.json. `--progress`: Trend, Kennzahlen, Stufenfreigabe, faellige Konzepte. STUFE steht oben in analyze.py.
-* `drill.py add | quiz | reveal | stats | prune | speed`: Drill Pool zur aktuellen Stufe, Wiederholung nach 3 und 7 Tagen, Loesungen in Worten, woechentliche Schnellrunde.
+* `drill.py add | quiz | reveal | warum | stats | prune | speed`: Drill Pool zur aktuellen Stufe, Wiederholung nach 3 und 7 Tagen, Loesungen in Worten, `warum <id> <Zug>` nach jeder falschen Antwort (vier Bilder: dein Zug, seine Antwort, Folge mit Material, dasselbe nach dem besten Zug), woechentliche Schnellrunde.
 * `sync.py import | export`: Stand aus der Artefakt Datenbank laden, neue Dokumente dorthin vorbereiten (nur Anlegen, nie Aendern).
 * `show.py`: Bilderfolgen (storyboard), Einzelbretter (render), Zuege in Worten (move_words), Pfeilpruefung, FAKT Zeilen je Frame.
 * `check.py line | fen | move | hang`: Faktencheck fuer alles, was Claude frei ueber eine Stellung sagen will.
