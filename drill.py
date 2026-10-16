@@ -24,7 +24,10 @@ POOL_MAX = 10        # offene Aufgaben
 MIN_DROP = 15
 DRILL_FILE = os.path.join(BASE, "drills.json")
 DRILL_DIR = os.path.join(BASE, "drills")
-TODAY = datetime.date.today
+def TODAY():
+    """Qs Tag (Berlin), nicht der UTC Tag des Rechners: sonst ist abends eine Aufgabe erst morgen faellig."""
+    from zoneinfo import ZoneInfo
+    return datetime.datetime.now(ZoneInfo("Europe/Berlin")).date()
 
 
 def load():

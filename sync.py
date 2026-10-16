@@ -29,7 +29,7 @@ def load_dir(d, coll):
 
 def replay(item, history):
     """Serie, Faelligkeit, erledigt aus der Antwortfolge (gleiche Regeln wie drill.py reveal)."""
-    streak, due, done = 0, item.get("due0") or item.get("due") or datetime.date.today().isoformat(), False
+    streak, due, done = 0, item.get("due0") or item.get("due") or datetime.datetime.now(__import__("zoneinfo").ZoneInfo("Europe/Berlin")).date().isoformat(), False
     for h in history:
         day = datetime.date.fromisoformat(h["d"])
         if h["r"] == "ok":

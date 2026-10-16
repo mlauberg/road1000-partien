@@ -37,6 +37,16 @@ CHESSCOM = {"square light": "#eeeed2", "square dark": "#769656",
             "margin": "#262522", "coord": "#e6e6e6", "inner border": "#262522", "outer border": "#262522"}
 FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 FONT_B = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+_FALLBACK = {FONT: ("/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf", "/usr/share/fonts/truetype/freefont/FreeSans.ttf"),
+             FONT_B: ("/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf", "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf")}
+
+
+def font(path, size):
+    """Schrift laden; fehlt DejaVu in der Umgebung, naechste bekannte Schrift, zuletzt die Pillow Standardschrift (Bilder bleiben lesbar)."""
+    for cand in (path, *_FALLBACK.get(path, ())):
+        if os.path.exists(cand):
+            return ImageFont.truetype(cand, size)
+    return ImageFont.load_default(size=size)
 PIECE_DE = {chess.PAWN: "Bauer", chess.KNIGHT: "Springer", chess.BISHOP: "Laeufer", chess.ROOK: "Turm", chess.QUEEN: "Dame", chess.KING: "Koenig"}
 
 
@@ -142,7 +152,7 @@ def storyboard(out_png, frames, title="", perspective="white", cols=1, size=560,
         if not quiet:
             print(f"[{os.path.basename(out_png)} Frame {k}] " + " | ".join(frame_facts(b, arrows, last)))
     n = len(imgs); cols = min(cols, n); rows = (n + cols - 1) // cols
-    f_t, f_c, f_n = ImageFont.truetype(FONT_B, 24), ImageFont.truetype(FONT, 21), ImageFont.truetype(FONT_B, 21)
+    f_t, f_c, f_n = font(FONT_B, 24), font(FONT, 21), font(FONT_B, 21)
     cap_h, pad, title_h = 135, 16, (80 if title else 0)
     W = cols * size + (cols + 1) * pad
     H = title_h + rows * (size + cap_h) + (rows + 1) * pad
@@ -181,7 +191,7 @@ def render(fen, out_png, orientation=chess.WHITE, played=None, best=None, lastmo
     img = Image.open(io.BytesIO(cairosvg.svg2png(bytestring=svg.encode(), output_width=size))).convert("RGB")
     if caption_lines:
         pad = 14
-        f, fb = ImageFont.truetype(FONT, 20), ImageFont.truetype(FONT_B, 22)
+        f, fb = font(FONT, 20), font(FONT_B, 22)
         d0 = ImageDraw.Draw(img)
         rows = []  # (Text, fett) nach Umbruch auf Bildbreite
         for i, line in enumerate(caption_lines):
