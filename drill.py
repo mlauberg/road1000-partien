@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Drill Pool: deine eigenen Fehlerstellungen als Quiz, nur zur aktuellen Stufe.
-    python3 drill.py add games/<report>.json      nimmt Drillkandidaten des Spiels auf (Stufe <= STUFE, Verlust >= 15 %), Pool max 10 offen
+    python3 drill.py add games/<report>.json      nimmt Drillkandidaten des Spiels auf (Stufe <= STUFE, Verlust >= 15 %), Pool max 15 offen
     python3 drill.py quiz [n]                     rendert bis zu n faellige Aufgaben OHNE Pfeile und ohne Tipp
     python3 drill.py reveal <id> [--ok|--fail]    Aufloesung mit Pfeilen, Ergebnis wird gespeichert
     python3 drill.py warum <id> <Zug>             nach einer falschen Antwort: 4 Bilder, warum SEIN Zug (SAN, z. B. exf6) schlechter ist als der beste
@@ -22,7 +22,7 @@ import chess  # noqa: E402
 import show  # noqa: E402
 from analyze import STUFE  # noqa: E402   (1 Captures, 2 Checks, 3 Attacks; wird in analyze.py umgestellt)
 
-POOL_MAX = 10        # offene Aufgaben
+POOL_MAX = 15        # offene Aufgaben (10 bis 19.10.2026, dann 15: frisches Material kam nicht mehr rein)
 MIN_DROP = 15
 DRILL_FILE = os.path.join(BASE, "drills.json")
 DRILL_DIR = os.path.join(BASE, "drills")
