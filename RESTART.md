@@ -3,10 +3,10 @@
 Q schreibt "Road to 1000" oder "Analyse". Claude macht in dieser Reihenfolge, ohne Rueckfragen:
 
 1. Repo: `mlauberg/road1000-partien` haengt an der Sitzung (Q waehlt es beim Start aus; sonst add_repo mit Schreibrecht, GitHub Konto `mlauberg`). Klon: `/home/claude/road1000-partien`, dort arbeiten. Pruefung: `git -C /home/claude/road1000-partien pull -q --rebase origin main && echo ok`.
-2. Stockfish 17.1 (80 MB, liegt nie im Repo), drei Befehle im Klon:
-   `curl -sSL -o /home/claude/sf.tar https://github.com/official-stockfish/Stockfish/releases/download/sf_17.1/stockfish-ubuntu-x86-64-avx2.tar`
-   `mkdir -p engine && tar xf /home/claude/sf.tar -C engine --strip-components=1 stockfish/stockfish-ubuntu-x86-64-avx2 && mv engine/stockfish-ubuntu-x86-64-avx2 engine/stockfish && chmod +x engine/stockfish`
-   `printf "uci\nquit\n" | engine/stockfish | head -1` muss "Stockfish 17.1" sagen.
+2. Stockfish 19 (seit 28.10.2026, vorher 17.1; ab Version 19 gibt es nur noch "universal" Builds, die die CPU selbst erkennen; liegt nie im Repo), drei Befehle im Klon:
+   `curl -sSL -o /home/claude/sf.tar.gz https://github.com/official-stockfish/Stockfish/releases/download/sf_19/stockfish-linux-x86-64-universal.tar.gz`
+   `mkdir -p engine && tar xzf /home/claude/sf.tar.gz -C engine --strip-components=1 stockfish/stockfish-linux-x86-64-universal && mv engine/stockfish-linux-x86-64-universal engine/stockfish && chmod +x engine/stockfish && rm /home/claude/sf.tar.gz`
+   `printf "uci\nquit\n" | engine/stockfish | head -1` muss "Stockfish 19" sagen.
 3. `pip install --break-system-packages cairosvg`. Die chess Bibliothek liegt als Ordner `chess/` bei (pip chess scheitert in der Umgebung).
 4. `COACH_PROTOCOL.md`, `LEHRPLAN.md`, `KONZEPTE.md` komplett lesen: Regeln, Lernmethode, Theoriekarten.
 5. Stand laden. Fortschritt und Drills leben in der Datenbank des Artefakts "Road to 1000" (Adresse unten). Werkzeug ArtifactData, vier Aufrufe:
@@ -23,7 +23,7 @@ Derselbe Chat an einem neuen Tag: Q schreibt nur "Analyse". Claude macht dann `g
 Artefakt (Datenbank und Seite): https://claude.ai/artifact/E46EePzEV7k5vKzM8i5Bhb
 
 ## Dateien
-* `analyze.py <pgn> | --fetch | --pull | --progress`: Stockfish Analyse mit 2 Engines parallel, waehlt Lektion 1 und 2 (erst aktuelle Stufe, dann Wiederholung, dann groesster Verlust), rendert L1, L2 (Lektionen, 3 Bilder, Text nur aus Engine Fakten, in Worten), F1, F2 (Funde), V1 (verpasste Chance), fuehrt progress.json. `--progress`: Trend, Kennzahlen, Stufenfreigabe, faellige Konzepte. STUFE steht oben in analyze.py.
+* `analyze.py <pgn> | --fetch | --pull | --progress`: Stockfish Analyse (Reports bis 21.10.2026 noch mit 17.1 gerechnet, Prozentwerte koennen leicht abweichen, Urteile gleich) mit 2 Engines parallel, waehlt Lektion 1 und 2 (erst aktuelle Stufe, dann Wiederholung, dann groesster Verlust), rendert L1, L2 (Lektionen, 3 Bilder, Text nur aus Engine Fakten, in Worten), F1, F2 (Funde), V1 (verpasste Chance), fuehrt progress.json. `--progress`: Trend, Kennzahlen, Stufenfreigabe, faellige Konzepte. STUFE steht oben in analyze.py.
 * `drill.py add | quiz | reveal | warum | stats | prune | speed`: Drill Pool zur aktuellen Stufe, Wiederholung nach 3 und 7 Tagen, Loesungen in Worten, `warum <id> <Zug>` nach jeder falschen Antwort (vier Bilder: dein Zug, seine Antwort, Folge mit Material, dasselbe nach dem besten Zug), woechentliche Schnellrunde.
 * `sync.py import | export`: Stand aus der Artefakt Datenbank laden, neue Dokumente dorthin vorbereiten (nur Anlegen, nie Aendern).
 * `show.py`: Bilderfolgen (storyboard), Einzelbretter (render), Zuege in Worten (move_words), Pfeilpruefung, FAKT Zeilen je Frame.

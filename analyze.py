@@ -651,7 +651,7 @@ def analyze_game(pgn_text, player=PLAYER, quiet=False):
         "user": side_summary(user_color), "opp": side_summary(not user_color), "kpi": kpi,
         "win_curve_user": win_curve, "turning_point": turning, "critical": chosen, "lessons": lessons, "missed_chances": missed,
         "best_find": best_find, "hard_find": hard_find, "moves": moves_out,
-        "engine": "Stockfish 17.1", "depth_fast": DEPTH_FAST, "depth_deep": DEPTH_DEEP, "workers": N_WORKERS,
+        "engine": "Stockfish 19", "depth_fast": DEPTH_FAST, "depth_deep": DEPTH_DEEP, "workers": N_WORKERS,
     }
 
 
