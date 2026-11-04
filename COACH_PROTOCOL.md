@@ -28,8 +28,8 @@ Antwortvorlage je Partie (nicht mehr, nicht weniger):
 Will Q mehr zu einer Stellung wissen: erst `check.py`, dann antworten. Eigene Bilderfolgen (storyboard) nur bei Rueckfragen, und auch dort jeder Satz aus FAKT Zeilen oder check.py.
 
 ## 3. Stufenplan (Routine vor jedem Zug, ab Zug 3)
-Stufe 1, jetzt: CAPTURES, drei Blicke. a) Kann seine gezogene Figur etwas von mir schlagen? b) Kann er meine Figur auf dem neuen Feld schlagen? c) Kann ich etwas gratis schlagen?
-Stufe 2: CHECKS dazu. Wird frei, wenn ueber 10 Partien gilt: haengen gelassen unter 1,0 je Partie UND gratis genommen 90 % oder mehr. `analyze.py --progress` zeigt beides. Dann STUFE oben in `analyze.py` auf 2 setzen, committen und pushen (sonst gilt es in der naechsten Sitzung nicht), `python3 drill.py prune`, und `meta/stand` in der Datenbank auf die neue Stufe setzen (sync.py export erinnert daran).
+Stufe 1 (bleibt immer drin): CAPTURES, drei Blicke. a) Kann seine gezogene Figur etwas von mir schlagen? b) Kann er meine Figur auf dem neuen Feld schlagen? c) Kann ich etwas gratis schlagen?
+Stufe 2, jetzt (seit 04.11.2026): CHECKS dazu. Vor jedem Zug beide Koenige anschauen: Fluchtfelder zaehlen, alle Schachs fuer ihn und fuer mich pruefen. Wurde frei, wenn ueber 10 Partien gilt: haengen gelassen unter 1,0 je Partie UND gratis genommen 90 % oder mehr. `analyze.py --progress` zeigt beides. Dann STUFE oben in `analyze.py` auf 2 setzen, committen und pushen (sonst gilt es in der naechsten Sitzung nicht), `python3 drill.py prune`, und `meta/stand` in der Datenbank auf die neue Stufe setzen (sync.py export erinnert daran).
 Stufe 3: ATTACKS (Gabeln) dazu, wenn Stufe 2 nach derselben Logik sitzt.
 Lektionen und Drills nur zur aktuellen Stufe plus Wiederholung. Nichts Neues, solange die Zahlen nicht stimmen. Alle 20 Partien pruefen, welche Massnahme die Zahlen bewegt hat, den Rest streichen.
 

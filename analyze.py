@@ -35,7 +35,7 @@ DEPTH_DEEP = 20       # Lektions- und Drillstellungen, 3 Varianten
 DEPTH_PUNISH = 18     # Widerlegung nach dem Fehler
 N_WORKERS = max(1, min(4, os.cpu_count() or 1))
 HASH_MB = 256
-STUFE = 1             # aktuelle Trainingsstufe: 1 Captures, 2 Checks, 3 Attacks. Hier umstellen, drill.py liest es mit.
+STUFE = 2             # aktuelle Trainingsstufe: 1 Captures, 2 Checks, 3 Attacks. Hier umstellen, drill.py liest es mit.
 DRILL_MIN_DROP = 15   # ab diesem Verlust (Prozentpunkte) wird eine Stellung Drillkandidat
 ALT_WINDOW = 5        # Zuege innerhalb von 5 Punkten Gewinnchance zum besten gelten im Drill als richtig
 
