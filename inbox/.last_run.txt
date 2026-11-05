@@ -1,1 +1,1 @@
-2026-11-04T17:40:31Z Lauf 41879408488 success: 2 neue Partien (2026-10 21 Partien bei chess.com, 2026-11 9 Partien bei chess.com), alle.pgn: 30 Partien
+2026-11-05T20:25:17Z Lauf 42103185186 success: Keine neuen Partien (2026-10 21 Partien bei chess.com, 2026-11 9 Partien bei chess.com).
